@@ -8,6 +8,8 @@ import fs from "node:fs";
 import { env, log, p, readJson, writeJson } from "./lib.mjs";
 import { comment, publishCarousel, publishReel, trialProbe, whoami } from "./instagram.mjs";
 
+// in GitHub Actions, show any error on the run summary page (not only inside the log)
+if (process.env.GITHUB_ACTIONS) for (const ev of ["uncaughtException", "unhandledRejection"]) process.on(ev, (e) => { console.log(`::error::${e?.message ?? e}`); process.exit(1); });
 const CHECK = process.argv.includes("--check");
 if (process.argv.includes("--trial-test")) {
   if (!env("IG_ACCESS_TOKEN") || !env("IG_USER_ID")) { console.log("no token in .env yet (see README step 2)"); process.exit(1); }
