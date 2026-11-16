@@ -50,7 +50,10 @@ if (CHECK) {
     const me = await whoami();
     console.log(`token ok: @${me.username}, ${me.media_count} posts`);
     if (me.username !== "pencilbirdofficial") throw new Error(`token is for @${me.username}, not @pencilbirdofficial`);
-  } else console.log("no token in .env yet (see README step 2)");
+  } else {
+    console.log("no token in .env yet (see README step 2)");
+    if (process.env.GITHUB_ACTIONS) throw new Error("IG_USER_ID / IG_ACCESS_TOKEN secrets are missing in GitHub");
+  }
   if (!BASE) console.log("MEDIA_BASE not set: carousels need it outside GitHub Actions");
   process.exit(0);
 }
