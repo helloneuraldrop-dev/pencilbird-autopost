@@ -14,6 +14,10 @@ on:
         description: "Post this id now (e.g. c1-by-age). Leave empty to post whatever is due."
         required: false
         default: ""
+      check_only:
+        description: "Only test the token and files (posts nothing)"
+        type: boolean
+        default: false
 
 permissions:
   contents: write
@@ -36,6 +40,7 @@ jobs:
           IG_USER_ID: ${{ secrets.IG_USER_ID }}
           IG_ACCESS_TOKEN: ${{ secrets.IG_ACCESS_TOKEN }}
         run: |
+          if [ "${{ github.event.inputs.check_only }}" = "true" ]; then node publish.mjs --check; exit 0; fi
           if [ -n "${{ github.event.inputs.post_now }}" ]; then node publish.mjs --now="${{ github.event.inputs.post_now }}"; else node publish.mjs; fi
       - name: Save what was posted
         if: always()
