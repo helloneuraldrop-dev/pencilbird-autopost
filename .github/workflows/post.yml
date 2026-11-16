@@ -1,0 +1,46 @@
+name: Post to Instagram
+
+# Posts go out at 13:30 and 21:00 IST. GitHub cron often starts 5-15 min late; the second run of each slot
+# is a backup that only posts what is still missing (data/posted.json), so nothing goes out twice.
+on:
+  schedule:
+    - cron: "0 8 * * *"    # 13:30 IST
+    - cron: "30 8 * * *"   # 14:00 IST backup
+    - cron: "30 15 * * *"  # 21:00 IST
+    - cron: "0 16 * * *"   # 21:30 IST backup
+  workflow_dispatch:
+    inputs:
+      post_now:
+        description: "Post this id now (e.g. c1-by-age). Leave empty to post whatever is due."
+        required: false
+        default: ""
+
+permissions:
+  contents: write
+
+concurrency:
+  group: instagram
+  cancel-in-progress: false
+
+jobs:
+  post:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Publish what is due
+        env:
+          IG_USER_ID: ${{ secrets.IG_USER_ID }}
+          IG_ACCESS_TOKEN: ${{ secrets.IG_ACCESS_TOKEN }}
+        run: |
+          if [ -n "${{ github.event.inputs.post_now }}" ]; then node publish.mjs --now="${{ github.event.inputs.post_now }}"; else node publish.mjs; fi
+      - name: Save what was posted
+        if: always()
+        run: |
+          git config user.name "pencilbird-bot"
+          git config user.email "actions@users.noreply.github.com"
+          git add data/posted.json
+          git diff --cached --quiet || (git commit -m "Posted to Instagram" && git push)

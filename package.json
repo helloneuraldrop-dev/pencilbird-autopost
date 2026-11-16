@@ -1,0 +1,11 @@
+{
+ "name": "pencilbird-autopost",
+ "private": true,
+ "type": "module",
+ "scripts": {
+  "prepare-media": "node prepare.mjs",
+  "check": "node publish.mjs --check",
+  "publish": "node publish.mjs",
+  "token": "node token.mjs"
+ }
+}
