@@ -48,4 +48,8 @@ jobs:
           git config user.name "pencilbird-bot"
           git config user.email "actions@users.noreply.github.com"
           git add data/posted.json
-          git diff --cached --quiet || (git commit -m "Posted to Instagram" && git push)
+          git diff --cached --quiet && exit 0
+          git commit -m "Posted to Instagram"
+          # if main moved meanwhile, rebase and retry: an unsaved posted.json would let the backup run post again
+          for i in 1 2 3 4 5; do git push && exit 0; git pull --rebase origin main; sleep 5; done
+          echo "::error::Could not save data/posted.json. Check Instagram before the backup run posts again."; exit 1

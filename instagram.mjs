@@ -30,9 +30,11 @@ async function waitFinished(id, tries, every, what) {
 
 async function publish(creationId) {
   const published = await call("POST", `${graph()}/${igUser()}/media_publish`, { creation_id: creationId });
-  const info = await call("GET", `${graph()}/${published.id}`, { fields: "permalink" });
-  log(`published ${info.permalink}`);
-  return { mediaId: published.id, permalink: info.permalink };
+  // the post is live now: a failed permalink lookup must not look like a failed post (the backup run would post it again)
+  let permalink = "";
+  try { permalink = (await call("GET", `${graph()}/${published.id}`, { fields: "permalink" })).permalink; } catch (e) { log(`permalink lookup failed: ${e.message}`); }
+  log(`published ${permalink || published.id}`);
+  return { mediaId: published.id, permalink };
 }
 
 async function uploadChunks(containerId, bytes, chunk) {

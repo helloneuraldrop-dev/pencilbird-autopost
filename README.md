@@ -32,5 +32,5 @@ Stories are NOT posted: the Graph API cannot add Poll or Link stickers, so stori
 
 ## After changing any post
 
-Rebuild the piece in `marketing/`, then `node prepare.mjs`, `node publish.mjs --check`, commit and push.
+Rebuild the piece in `marketing/`, then `git pull` (the bot commits `data/posted.json`), `node prepare.mjs`, `node publish.mjs --check`, commit and push.
 To move a post, change its time in the `PIECES` list in `prepare.mjs` and run it again.
