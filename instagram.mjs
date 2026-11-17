@@ -29,7 +29,15 @@ async function waitFinished(id, tries, every, what) {
 }
 
 async function publish(creationId) {
-  const published = await call("POST", `${graph()}/${igUser()}/media_publish`, { creation_id: creationId });
+  let published;
+  try { published = await call("POST", `${graph()}/${igUser()}/media_publish`, { creation_id: creationId }); }
+  catch (e) {
+    // Instagram sometimes publishes and still answers with an error ("action is blocked", 17 Nov 2026); never report a live post as failed
+    const st = await call("GET", `${graph()}/${creationId}`, { fields: "status_code" }).catch(() => ({}));
+    if (st.status_code !== "PUBLISHED") throw e;
+    published = (await call("GET", `${graph()}/${igUser()}/media`, { fields: "id", limit: "1" })).data[0];
+    log(`publish answered with an error but the post is live: ${e.message.slice(0, 120)}`);
+  }
   // the post is live now: a failed permalink lookup must not look like a failed post (the backup run would post it again)
   let permalink = "";
   try { permalink = (await call("GET", `${graph()}/${published.id}`, { fields: "permalink" })).permalink; } catch (e) { log(`permalink lookup failed: ${e.message}`); }
