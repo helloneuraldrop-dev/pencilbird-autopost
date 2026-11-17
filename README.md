@@ -34,3 +34,7 @@ Stories are NOT posted: the Graph API cannot add Poll or Link stickers, so stori
 
 Rebuild the piece in `marketing/`, then `git pull` (the bot commits `data/posted.json`), `node prepare.mjs`, `node publish.mjs --check`, commit and push.
 To move a post, change its time in the `PIECES` list in `prepare.mjs` and run it again.
+
+## On-time start
+
+GitHub's own schedule ran hours late or not at all, so `timer/` (a Cloudflare Worker, cron `*/30 8,15,16 * * *` UTC) starts the workflow at each slot. It needs the secret `GH_TOKEN`: a fine-grained GitHub token for this repo with **Actions: Read and write**. Set it with `npx wrangler secret put GH_TOKEN` from `timer/`; deploy with `npx wrangler deploy`. GitHub's schedule stays on as a backup.

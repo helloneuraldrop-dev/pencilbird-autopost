@@ -1,0 +1,8 @@
+{
+  "name": "pencilbird-timer",
+  "main": "worker.js",
+  "compatibility_date": "2026-11-01",
+  "workers_dev": false,
+  // UTC: 08:00 and 08:30 = 13:30 / 14:00 IST; 15:30 and 16:00 = 21:00 / 21:30 IST (15:00 and 16:30 also fire and find nothing due)
+  "triggers": { "crons": ["*/30 8,15,16 * * *"] }
+}
