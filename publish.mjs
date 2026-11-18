@@ -90,6 +90,7 @@ for (const it of due) {
   } catch (e) {
     failed++;
     log(`✗ ${it.id} failed: ${e.message}`);
+    if (process.env.GITHUB_ACTIONS) console.log(`::error::${it.id} failed: ${e.message.slice(0, 500)}`); // visible on the run page without signing in
   }
 }
 if (failed) process.exit(1);  // red run in GitHub Actions, so the failure is visible
