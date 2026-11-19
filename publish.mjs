@@ -6,7 +6,7 @@
 //   node publish.mjs --trial-test  ask Instagram whether this account can post trial reels (posts nothing)
 import fs from "node:fs";
 import { env, log, p, readJson, writeJson } from "./lib.mjs";
-import { comment, publishCarousel, publishReel, trialProbe, whoami } from "./instagram.mjs";
+import { comment, latestMedia, publishCarousel, publishReel, trialProbe, whoami } from "./instagram.mjs";
 
 // in GitHub Actions, show any error on the run summary page (not only inside the log)
 if (process.env.GITHUB_ACTIONS) for (const ev of ["uncaughtException", "unhandledRejection"]) process.on(ev, (e) => { console.log(`::error::${e?.message ?? e}`); process.exit(1); });
@@ -69,7 +69,12 @@ for (const it of due) {
   log(`posting ${it.id} (${trial ? "trial reel" : it.type}, slot ${it.ist} IST)`);
   try {
     let res;
-    try {
+    // a post newer than this slot means an earlier run posted it but lost track (19 Nov 2026: C2 went out twice)
+    const last = NOW || trial ? null : await latestMedia();
+    if (last && Date.parse(last.timestamp) >= Date.parse(it.at)) {
+      res = { mediaId: last.id, permalink: last.permalink };
+      log(`${it.id} is already live (${last.permalink}), not posting it again`);
+    } else try {
       res = it.type === "carousel"
         ? await publishCarousel({ urls: it.images.map(url), caption: it.caption })
         : await publishReel({ video: p(it.video), caption: it.caption, coverUrl: it.cover ? url(it.cover) : undefined, trial });

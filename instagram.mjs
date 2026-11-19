@@ -29,13 +29,15 @@ async function waitFinished(id, tries, every, what) {
 }
 
 async function publish(creationId) {
+  const started = Date.now();
   let published;
   try { published = await call("POST", `${graph()}/${igUser()}/media_publish`, { creation_id: creationId }); }
   catch (e) {
-    // Instagram sometimes publishes and still answers with an error ("action is blocked", 17 Nov 2026); never report a live post as failed
-    const st = await call("GET", `${graph()}/${creationId}`, { fields: "status_code" }).catch(() => ({}));
-    if (st.status_code !== "PUBLISHED") throw e;
-    published = (await call("GET", `${graph()}/${igUser()}/media`, { fields: "id", limit: "1" })).data[0];
+    // Instagram often publishes and still answers "action is blocked" (17 and 19 Nov 2026): look at the account before calling it a failure
+    await sleep(15000);
+    const last = await latestMedia().catch(() => null);
+    if (!last || Date.parse(last.timestamp) < started - 120000) throw e;
+    published = last;
     log(`publish answered with an error but the post is live: ${e.message.slice(0, 120)}`);
   }
   // the post is live now: a failed permalink lookup must not look like a failed post (the backup run would post it again)
@@ -103,6 +105,9 @@ export async function publishCarousel({ urls, caption }) {
 
 /** Our own comment on our post (needs instagram_manage_comments). */
 export const comment = (mediaId, message) => call("POST", `${graph()}/${mediaId}/comments`, { message });
+
+/** The account's newest post: { id, timestamp, permalink } or undefined. */
+export const latestMedia = async () => (await call("GET", `${graph()}/${igUser()}/media`, { fields: "id,timestamp,permalink", limit: "1" })).data[0];
 
 /** Who the token belongs to, for the setup check. */
 export const whoami = () => call("GET", `${graph()}/${igUser()}`, { fields: "username,media_count" });
